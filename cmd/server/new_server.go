@@ -9,21 +9,31 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
 	db "github.com/tetrex/golang-project-template/db/sqlc"
+	healthService "github.com/tetrex/golang-project-template/services/health"
 	"github.com/tetrex/golang-project-template/utils/config"
 	util_validator "github.com/tetrex/golang-project-template/utils/validator"
 	"golang.org/x/time/rate"
 )
 
+type Services struct {
+	Health *healthService.HealthService
+}
 type Server struct {
-	config  config.Config
-	router  *echo.Echo
-	logger  *zerolog.Logger
-	queries *db.Queries
+	config   config.Config
+	router   *echo.Echo
+	logger   *zerolog.Logger
+	queries  *db.Queries
+	services *Services
+}
+
+func (s *Server) GetServices() *Services {
+	return s.services
 }
 
 func (s *Server) GetConfig() config.Config {
 	return s.config
 }
+
 func (s *Server) GetRouter() *echo.Echo {
 	return s.router
 }
@@ -109,11 +119,15 @@ func NewServer(c ServerParams) (*Server, error) {
 	case "local":
 	default:
 	}
+	health_service := healthService.NewHealthService()
 
 	return &Server{
 		config:  c.Config,
 		router:  router,
 		logger:  c.Logger,
 		queries: c.Queries,
+		services: &Services{
+			Health: health_service,
+		},
 	}, nil
 }
