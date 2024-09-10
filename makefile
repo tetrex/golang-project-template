@@ -10,27 +10,30 @@ check_required_dev_executables:
 	done
 	@ echo "All required executables ($(DEV_REQUIRED_EXECUTABLES)) are available in PATH."
 
+doc:
+	@ swag init -g ./main.go -o docs 
+
 
 # dev/local commands
 dev_server:
 	@ $(MAKE) check_required_dev_executables
-	@ docker compose -f ./docker/server/docker-compose.yml up --build --remove-orphans
+	@ docker compose -f ./docker/server/docker-compose-local.yml up --build --remove-orphans
 
 # migrations
 m_up:
-	@ docker compose -f ./docker/docker-compose-local.yml run --rm local_migrate \
+	@ docker compose -f ./docker/server/docker-compose-local.yml run --rm local_migrate \
 	  -source file://migrations \
 	  -database 'mysql://user:pass@tcp(local_mysql:3306)/db' \
 	  -verbose up 1
 
 m_status: 
-	@ docker compose -f ./docker/docker-compose-local.yml run --rm local_migrate \
+	@ docker compose -f ./docker/server/docker-compose-local.yml run --rm local_migrate \
 	  -source file://migrations \
 	  -database 'mysql://user:pass@tcp(localhost:3306)/db' \
 	  version
 
 m_down: 
-	@ docker compose -f ./docker/docker-compose-local.yml run --rm local_migrate \
+	@ docker compose -f ./docker/server/docker-compose-local.yml run --rm local_migrate \
 	  -source file://migrations \
 	  -database 'mysql://user:pass@tcp(localhost:3306)/db' \
 	  -verbose down 1
@@ -40,7 +43,7 @@ m_create:
 		echo "Error: NAME is not set. Please provide a value like: make goose_create NAME=mig_xx1"; \
 		exit 1; \
 	fi
-	@ docker compose -f ./docker/docker-compose-local.yml run --rm local_migrate \
+	@ docker compose -f ./docker/server/docker-compose-local.yml run --rm local_migrate \
 	  create \
 	  -dir file://migrations \
 	  -ext sql \
@@ -49,11 +52,11 @@ m_create:
 
 # sqlc
 sqlc_gen:
-	@ docker compose -f ./docker/docker-compose-local.yml run --rm local_sqlc generate
+	@ docker compose -f ./docker/server/docker-compose-local.yml run --rm local_sqlc generate
 	@ echo "sql schema generated"
 
 sqlc_verify:
-	@ docker compose -f ./docker/docker-compose-local.yml run --rm local_sqlc verify
+	@ docker compose -f ./docker/server/docker-compose-local.yml run --rm local_sqlc verify
 	@ echo "sql schema verified"
 
 

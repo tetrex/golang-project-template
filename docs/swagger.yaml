@@ -1,0 +1,12 @@
+basePath: /
+host: localhost:8000
+info:
+  contact:
+    name: github.com/tetrex
+  description: This is a backend api server
+  license:
+    name: MIT License
+  title: server api
+  version: "1.0"
+paths: {}
+swagger: "2.0"

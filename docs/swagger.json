@@ -1,0 +1,17 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a backend api server",
+        "title": "server api",
+        "contact": {
+            "name": "github.com/tetrex"
+        },
+        "license": {
+            "name": "MIT License"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8000",
+    "basePath": "/",
+    "paths": {}
+}
