@@ -2,12 +2,10 @@ package main
 
 import (
 	"net/http"
-	"path/filepath"
-	"runtime"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/golang-migrate/migrate"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -70,7 +68,7 @@ func NewServer(c ServerParams) (*Server, error) {
 
 	// logger
 	router.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-		Format: "time=${time_rfc3339_nano}, remote_ip=${remote_ip}, method=${method}, uri=${uri}, status=${status}\n",
+		Format: "time=${time_rfc3339_nano}, request_id=${id}, remote_ip=${remote_ip}, method=${method}, uri=${uri}, status=${status}, latency_nano=${latency}, bytes_in=${bytes_in}, bytes_out=${bytes_out}\n",
 	}))
 
 	// stack trace for debugging
@@ -97,48 +95,29 @@ func NewServer(c ServerParams) (*Server, error) {
 
 	router.Use(middleware.RateLimiterWithConfig(config))
 
-	// TODO: enble before deployment
 	// cors
-	// router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-	// 	AllowOrigins:     []string{"https://*.domain.com", "https://v2.domain.com"},
-	// 	AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodOptions},
-	// 	AllowCredentials: true,
-	// 	AllowHeaders:     []string{"application/json", "text/plain", "*/*"},
-	// 	Skipper: func(c echo.Context) bool {
-	// 		// if User-Agent is postman then skip
-	// 		h := c.Request().Header.Get("User-Agent")
-	// 		user_agent := strings.Split(h, "/")
+	if c.Config.AppEnv != "local" {
+		router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+			AllowOrigins:     []string{"https://*.domain.com", "https://stage.domain.com"},
+			AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodOptions},
+			AllowCredentials: true,
+			AllowHeaders:     []string{"application/json", "text/plain", "*/*"},
+			Skipper: func(c echo.Context) bool {
+				// if User-Agent is postman then skip
+				h := c.Request().Header.Get("User-Agent")
+				user_agent := strings.Split(h, "/")
 
-	// 		return strings.EqualFold("PostmanRuntime", user_agent[0])
+				return strings.EqualFold("PostmanRuntime", user_agent[0])
 
-	// 	},
-	// }))
-
-	// setup routes here
-
-	// some specific tasks
-	switch c.Config.AppEnv {
-	case "stage":
-	case "prod":
-	case "local":
-		_, b, _, _ := runtime.Caller(0)
-		root_path := filepath.Join(filepath.Dir(b), "../../")
-
-		m, err := migrate.New(
-			filepath.Join(root_path, "file:///db/migrations"),
-			c.Config.PgConnStr)
-		if err != nil {
-			c.Logger.Fatal().Err(err)
-		}
-		if err := m.Up(); err != nil {
-			c.Logger.Fatal().Err(err)
-		}
-
-	default:
+			},
+		}))
 	}
 
 	// services
 	services := initServices()
+
+	// routes setup
+	initRoutes(router, services, c.Logger)
 
 	return &Server{
 		config:   c.Config,

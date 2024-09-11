@@ -6,8 +6,11 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"runtime"
 	"time"
 
+	"github.com/golang-migrate/migrate"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pkg/errors"
@@ -63,10 +66,6 @@ func main() {
 	}
 
 	router := s.GetRouter()
-	services := s.GetServices()
-
-	// routes setup
-	initRoutes(router, services, l)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
@@ -89,6 +88,18 @@ func main() {
 		}()
 	case "local":
 	default:
+		_, b, _, _ := runtime.Caller(0)
+		root_path := filepath.Join(filepath.Dir(b), "../../")
+
+		m, err := migrate.New(
+			filepath.Join(root_path, "file:///db/migrations"),
+			config.PgConnStr)
+		if err != nil {
+			l.Fatal().Err(err)
+		}
+		if err := m.Up(); err != nil {
+			l.Fatal().Err(err)
+		}
 		go func() {
 			// ---
 			l.Log().Msgf("Starting server :: %d", 80)
