@@ -7,8 +7,9 @@ import (
 )
 
 type Config struct {
-	PgConnStr string `env:"PG_CONNECTION_STRING"`
-	AppEnv    string `env:"APP_ENV"`
+	PgConnStr       string `env:"PG_CONNECTION_STRING"`
+	PgxMigrationStr string `env:"PG_MIGRATION_STRING"`
+	AppEnv          string `env:"APP_ENV"`
 }
 
 func LoadConfig() (Config, error) {

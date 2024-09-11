@@ -29,9 +29,6 @@ services:
         condition: service_healthy
     volumes:
       - ../../:/app
-    environment:
-      PG_CONNECTION_STRING: ${PG_CONNECTION_STRING}
-      APP_ENV: ${APP_ENV}
 
   local_postgres:
     image: postgres

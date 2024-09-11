@@ -11,9 +11,11 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/golang-migrate/migrate"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // Import file source for migrations
+	_ "github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pkg/errors"
@@ -74,7 +76,6 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-
 	// some specific tasks
 	switch config.AppEnv {
 	case "stage":
@@ -94,13 +95,11 @@ func main() {
 	case "local":
 		_, b, _, _ := runtime.Caller(0)
 		root_path := filepath.Join(filepath.Dir(b), "../../")
-		// "file://"+filepath.Join(root_path, "db/migrations")
 		m, err := migrate.New(
-			root_path,
-			config.PgConnStr)
+			"file://"+filepath.Join(root_path, "db/migrations"),
+			config.PgxMigrationStr)
 		if err != nil {
 			l.Fatal().Err(err).Msg("Failed to create new migration")
-			return
 		}
 
 		if err := m.Up(); err != nil && err != migrate.ErrNoChange {
@@ -108,13 +107,14 @@ func main() {
 		}
 		go func() {
 			// ---
-			l.Log().Msgf("Starting server :: %d", 80)
+			l.Info().Msgf("Starting server :: %d", 80)
 			if err := router.Start(
 				fmt.Sprintf(":%d", 80)); err != nil && err != http.ErrServerClosed {
 				l.Fatal().Err(errors.Errorf("Server startup failed"))
 			}
 		}()
 	default:
+		l.Fatal().Err(fmt.Errorf("deafult case in switch"))
 	}
 
 	<-ctx.Done()
