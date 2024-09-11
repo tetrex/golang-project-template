@@ -6,7 +6,7 @@ import (
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
-func setupRoutes(router *echo.Echo, services *Services, l *zerolog.Logger) {
+func initRoutes(router *echo.Echo, services *Services, l *zerolog.Logger) {
 	router.GET("/", services.Health.HealthCheck)
 
 	router.GET("docs/*", echoSwagger.WrapHandler)

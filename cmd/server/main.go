@@ -66,7 +66,7 @@ func main() {
 	services := s.GetServices()
 
 	// routes setup
-	setupRoutes(router, services, l)
+	initRoutes(router, services, l)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()

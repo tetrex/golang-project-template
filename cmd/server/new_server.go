@@ -2,9 +2,13 @@ package main
 
 import (
 	"net/http"
+	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-migrate/migrate"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
@@ -117,17 +121,30 @@ func NewServer(c ServerParams) (*Server, error) {
 	case "stage":
 	case "prod":
 	case "local":
+		_, b, _, _ := runtime.Caller(0)
+		root_path := filepath.Join(filepath.Dir(b), "../../")
+
+		m, err := migrate.New(
+			filepath.Join(root_path, "file:///db/migrations"),
+			c.Config.PgConnStr)
+		if err != nil {
+			c.Logger.Fatal().Err(err)
+		}
+		if err := m.Up(); err != nil {
+			c.Logger.Fatal().Err(err)
+		}
+
 	default:
 	}
-	health_service := healthService.NewHealthService()
+
+	// services
+	services := initServices()
 
 	return &Server{
-		config:  c.Config,
-		router:  router,
-		logger:  c.Logger,
-		queries: c.Queries,
-		services: &Services{
-			Health: health_service,
-		},
+		config:   c.Config,
+		router:   router,
+		logger:   c.Logger,
+		queries:  c.Queries,
+		services: services,
 	}, nil
 }

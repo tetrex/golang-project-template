@@ -23,19 +23,19 @@ dev_server:
 m_up:
 	@ docker compose -f ./docker/server/docker-compose-local.yml run --rm local_migrate \
 	  -source file://migrations \
-	  -database 'mysql://user:pass@tcp(local_mysql:3306)/db' \
+	  -database 'postgres://user:pass@localhost:5432/db' \
 	  -verbose up 1
 
 m_status: 
 	@ docker compose -f ./docker/server/docker-compose-local.yml run --rm local_migrate \
 	  -source file://migrations \
-	  -database 'mysql://user:pass@tcp(localhost:3306)/db' \
+	  -database 'postgres://user:pass@localhost:5432/db' \
 	  version
 
 m_down: 
 	@ docker compose -f ./docker/server/docker-compose-local.yml run --rm local_migrate \
 	  -source file://migrations \
-	  -database 'mysql://user:pass@tcp(localhost:3306)/db' \
+	  -database 'postgres://user:pass@localhost:5432/db' \
 	  -verbose down 1
 
 m_create:
