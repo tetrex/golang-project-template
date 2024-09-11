@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"net/http"
@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
 	db "github.com/tetrex/golang-project-template/db/sqlc"
-	healthService "github.com/tetrex/golang-project-template/services/health"
+	healthService "github.com/tetrex/golang-project-template/pkg/server/services/health"
 	"github.com/tetrex/golang-project-template/utils/config"
 	util_validator "github.com/tetrex/golang-project-template/utils/validator"
 	"golang.org/x/time/rate"
@@ -54,7 +54,7 @@ type ServerParams struct {
 	Queries *db.Queries
 }
 
-func NewServer(c ServerParams) (*Server, error) {
+func NewServer(c *ServerParams) (*Server, error) {
 	router := echo.New()
 	new_validator := validator.New()
 
