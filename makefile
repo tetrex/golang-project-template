@@ -1,4 +1,4 @@
-DEV_REQUIRED_EXECUTABLES := go docker air
+DEV_REQUIRED_EXECUTABLES := go docker air golint gofmt
 CURRENT_SHELL := $(SHELL)
 
 check_required_dev_executables:
@@ -13,6 +13,15 @@ check_required_dev_executables:
 doc:
 	@ swag init -g ./main.go -o docs 
 
+# dev tools
+
+lint: ## Lint the code.
+	@ $(MAKE) check_required_dev_executables
+	@ golint ./...
+
+fmt: ## format code
+	@ $(MAKE) check_required_dev_executables
+	@ gofmt -w -l .
 
 # dev/local commands
 dev_server:
