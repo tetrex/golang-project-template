@@ -13,4 +13,4 @@ RUN go install github.com/air-verse/air@latest
 # for http server
 EXPOSE 80
 
-CMD ["air", "-c", ".air.toml"]
+CMD ["air", "-c", "server.air.toml"]
